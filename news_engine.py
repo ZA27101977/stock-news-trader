@@ -1,12 +1,24 @@
-import random
+from news_sources import fetch_news
+
+POSITIVE_WORDS = ["beat", "growth", "record", "profit", "upgrade", "strong"]
+NEGATIVE_WORDS = ["miss", "loss", "downgrade", "weak", "lawsuit", "decline"]
 
 def analyze_news(symbol: str) -> dict:
-    score = random.randint(-100, 100)
+    articles = fetch_news(symbol)
+    score = 0
 
-    if score > 30:
+    for title in articles:
+        for w in POSITIVE_WORDS:
+            if w in title:
+                score += 20
+        for w in NEGATIVE_WORDS:
+            if w in title:
+                score -= 20
+
+    if score > 20:
         sentiment = "חיובי"
         recommendation = "קנייה"
-    elif score < -30:
+    elif score < -20:
         sentiment = "שלילי"
         recommendation = "מכירה"
     else:
@@ -17,5 +29,6 @@ def analyze_news(symbol: str) -> dict:
         "symbol": symbol,
         "score": score,
         "sentiment": sentiment,
-        "recommendation": recommendation
+        "recommendation": recommendation,
+        "headlines": articles[:3]
     }
