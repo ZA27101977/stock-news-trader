@@ -1,20 +1,21 @@
 import random
 
-# סימולציה של ניתוח חדשות
-# (בשלב הבא נחבר לחדשות אמיתיות)
-
 def analyze_news(symbol: str) -> dict:
-    sentiment_score = random.randint(-100, 100)
+    score = random.randint(-100, 100)
 
-    if sentiment_score > 30:
-        sentiment = "Positive"
-    elif sentiment_score < -30:
-        sentiment = "Negative"
+    if score > 30:
+        sentiment = "חיובי"
+        recommendation = "קנייה"
+    elif score < -30:
+        sentiment = "שלילי"
+        recommendation = "מכירה"
     else:
-        sentiment = "Neutral"
+        sentiment = "ניטרלי"
+        recommendation = "המתנה"
 
     return {
         "symbol": symbol,
-        "score": sentiment_score,
-        "sentiment": sentiment
+        "score": score,
+        "sentiment": sentiment,
+        "recommendation": recommendation
     }
