@@ -17,18 +17,16 @@ stocks = st.multiselect(
 if st.button("📰 נתח חדשות ודוחות"):
     st.subheader("📊 תוצאות ניתוח")
 
-    for stock in stocks:
-        result = analyze_news(stock)
+   for stock in stocks:
+    r = analyze_news(stock)
 
-        if result["recommendation"] == "קנייה":
-            st.success(
-                f"{stock} | סנטימנט: {result['sentiment']} | ציון: {result['score']} | המלצה: {result['recommendation']}"
-            )
-        elif result["recommendation"] == "מכירה":
-            st.error(
-                f"{stock} | סנטימנט: {result['sentiment']} | ציון: {result['score']} | המלצה: {result['recommendation']}"
-            )
-        else:
-            st.info(
-                f"{stock} | סנטימנט: {result['sentiment']} | ציון: {result['score']} | המלצה: {result['recommendation']}"
-            )
+    if r["recommendation"] == "קנייה":
+        st.success(f"{stock} | סנטימנט: {r['sentiment']} | ציון: {r['score']} | המלצה: {r['recommendation']}")
+    elif r["recommendation"] == "מכירה":
+        st.error(f"{stock} | סנטימנט: {r['sentiment']} | ציון: {r['score']} | המלצה: {r['recommendation']}")
+    else:
+        st.info(f"{stock} | סנטימנט: {r['sentiment']} | ציון: {r['score']} | המלצה: {r['recommendation']}")
+
+    with st.expander("כותרות רלוונטיות"):
+        for h in r["headlines"]:
+            st.write("•", h)
