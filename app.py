@@ -1,3 +1,4 @@
+from alerts import send_telegram_alert
 import streamlit as st
 from stocks import DEFAULT_STOCKS
 from news_engine import analyze_news
@@ -27,6 +28,14 @@ if st.button("📰 נתח חדשות ודוחות"):
         elif r["recommendation"] == "מכירה":
             st.error(
                 f"{stock} | סנטימנט: {r['sentiment']} | ציון: {r['score']} | המלצה: {r['recommendation']}"
+                if r["recommendation"] in ["קנייה", "מכירה"]:
+    send_telegram_alert(
+        f"📈 {stock}\n"
+        f"סנטימנט: {r['sentiment']}\n"
+        f"ציון: {r['score']}\n"
+        f"המלצה: {r['recommendation']}"
+    )
+
             )
         else:
             st.info(
