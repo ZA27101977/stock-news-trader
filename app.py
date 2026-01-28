@@ -2,33 +2,11 @@ import streamlit as st
 import requests
 from datetime import datetime
 
-st.set_page_config(page_title="ניתוח מניות – חדשות בעברית", layout="wide")
-st.title("📊 מערכת ניתוח מניות לפי חדשות (עברית)")
+st.set_page_config(page_title="מערכת ניתוח מניות", layout="wide")
+st.title("📊 מערכת ניתוח מניות – ניתוח בעברית")
 
 NEWS_API_KEY = st.secrets["NEWS_API_KEY"]
 
-# ===============================
-# תרגום לעברית – LibreTranslate
-# ===============================
-def translate_to_he(text):
-    try:
-        response = requests.post(
-            "https://libretranslate.de/translate",
-            data={
-                "q": text,
-                "source": "en",
-                "target": "he",
-                "format": "text"
-            },
-            timeout=10
-        )
-        return response.json()["translatedText"]
-    except:
-        return text
-
-# ===============================
-# חדשות
-# ===============================
 def get_news(stock):
     url = "https://newsapi.org/v2/everything"
     params = {
@@ -41,12 +19,9 @@ def get_news(stock):
     r = requests.get(url, params=params)
     return r.json().get("articles", [])
 
-# ===============================
-# ניתוח סנטימנט
-# ===============================
 def analyze_sentiment(text):
-    positive = ["growth", "profit", "strong", "beat", "surge"]
-    negative = ["loss", "drop", "weak", "miss", "lawsuit"]
+    positive = ["growth", "profit", "strong", "beat", "surge", "record"]
+    negative = ["loss", "drop", "weak", "miss", "lawsuit", "decline"]
 
     score = 0
     t = text.lower()
@@ -59,16 +34,13 @@ def analyze_sentiment(text):
             score -= 1
 
     if score > 0:
-        return "חיובי", "קנייה"
+        return "חדשות חיוביות", "קנייה"
     elif score < 0:
-        return "שלילי", "מכירה"
+        return "חדשות שליליות", "מכירה"
     else:
-        return "נייטרלי", "המתנה"
+        return "חדשות ניטרליות", "המתנה"
 
-# ===============================
-# UI
-# ===============================
-stocks_input = st.text_input("הכנס מניות (מופרדות בפסיק)", "AAPL,TSLA,MSFT")
+stocks_input = st.text_input("הכנס מניות (AAPL,TSLA,MSFT)", "AAPL,TSLA,MSFT")
 stocks = [s.strip().upper() for s in stocks_input.split(",") if s.strip()]
 
 if st.button("🔍 ניתוח חדשות"):
@@ -80,16 +52,15 @@ if st.button("🔍 ניתוח חדשות"):
             st.warning("לא נמצאו חדשות")
             continue
 
-        combined_text = ""
+        combined = ""
 
         for a in articles:
-            title_he = translate_to_he(a["title"])
-            st.write("📰", title_he)
-            combined_text += a["title"] + " "
+            st.write("📰", a["title"])
+            combined += a["title"] + " "
 
-        sentiment, rec = analyze_sentiment(combined_text)
+        sentiment, rec = analyze_sentiment(combined)
 
-        st.write(f"📊 סנטימנט: **{sentiment}**")
+        st.write(f"📊 ניתוח: **{sentiment}**")
         st.write(f"📌 המלצה: **{rec}**")
         st.write(f"🕒 {datetime.now().strftime('%d/%m/%Y %H:%M')}")
 
@@ -98,7 +69,7 @@ if st.button("🔍 ניתוח חדשות"):
         elif rec == "מכירה":
             st.error("📉 איתות מכירה")
         else:
-            st.info("⏸️ אין פעולה")
+            st.info("⏸️ ללא פעולה")
 
         st.divider()
 
