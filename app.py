@@ -2,16 +2,32 @@ import streamlit as st
 import requests
 from datetime import datetime
 
-# ===============================
-# הגדרות כלליות
-# ===============================
-st.set_page_config(page_title="מערכת ניתוח מניות לפי חדשות", layout="wide")
-st.title("📊 מערכת ניתוח מניות לפי חדשות בזמן אמת")
+st.set_page_config(page_title="ניתוח מניות – חדשות בעברית", layout="wide")
+st.title("📊 מערכת ניתוח מניות לפי חדשות (עברית)")
 
-API_KEY = st.secrets["NEWS_API_KEY"]
+NEWS_API_KEY = st.secrets["NEWS_API_KEY"]
 
 # ===============================
-# פונקציה לשליפת חדשות
+# תרגום לעברית – LibreTranslate
+# ===============================
+def translate_to_he(text):
+    try:
+        response = requests.post(
+            "https://libretranslate.de/translate",
+            data={
+                "q": text,
+                "source": "en",
+                "target": "he",
+                "format": "text"
+            },
+            timeout=10
+        )
+        return response.json()["translatedText"]
+    except:
+        return text
+
+# ===============================
+# חדשות
 # ===============================
 def get_news(stock):
     url = "https://newsapi.org/v2/everything"
@@ -20,33 +36,26 @@ def get_news(stock):
         "language": "en",
         "sortBy": "publishedAt",
         "pageSize": 5,
-        "apiKey": API_KEY
+        "apiKey": NEWS_API_KEY
     }
-
-    response = requests.get(url, params=params)
-    data = response.json()
-
-    if data.get("status") != "ok":
-        return []
-
-    return data.get("articles", [])
+    r = requests.get(url, params=params)
+    return r.json().get("articles", [])
 
 # ===============================
-# ניתוח סנטימנט פשוט
+# ניתוח סנטימנט
 # ===============================
 def analyze_sentiment(text):
-    positive_words = ["beat", "growth", "profit", "surge", "strong", "record"]
-    negative_words = ["miss", "loss", "decline", "drop", "weak", "lawsuit"]
+    positive = ["growth", "profit", "strong", "beat", "surge"]
+    negative = ["loss", "drop", "weak", "miss", "lawsuit"]
 
     score = 0
-    text = text.lower()
+    t = text.lower()
 
-    for w in positive_words:
-        if w in text:
+    for w in positive:
+        if w in t:
             score += 1
-
-    for w in negative_words:
-        if w in text:
+    for w in negative:
+        if w in t:
             score -= 1
 
     if score > 0:
@@ -57,26 +66,16 @@ def analyze_sentiment(text):
         return "נייטרלי", "המתנה"
 
 # ===============================
-# קלט משתמש
+# UI
 # ===============================
-st.subheader("➕ מניות למעקב")
-
-stocks_input = st.text_input(
-    "הכנס סימולי מניות (מופרדים בפסיק)",
-    value="AAPL,TSLA,MSFT"
-)
-
+stocks_input = st.text_input("הכנס מניות (מופרדות בפסיק)", "AAPL,TSLA,MSFT")
 stocks = [s.strip().upper() for s in stocks_input.split(",") if s.strip()]
 
-# ===============================
-# הפעלת ניתוח
-# ===============================
-if st.button("🔍 נתח לפי חדשות"):
+if st.button("🔍 ניתוח חדשות"):
     for stock in stocks:
         st.markdown(f"## 🏷️ {stock}")
 
         articles = get_news(stock)
-
         if not articles:
             st.warning("לא נמצאו חדשות")
             continue
@@ -84,22 +83,23 @@ if st.button("🔍 נתח לפי חדשות"):
         combined_text = ""
 
         for a in articles:
-            st.write(f"📰 {a['title']}")
+            title_he = translate_to_he(a["title"])
+            st.write("📰", title_he)
             combined_text += a["title"] + " "
 
-        sentiment, recommendation = analyze_sentiment(combined_text)
+        sentiment, rec = analyze_sentiment(combined_text)
 
-        st.write(f"📊 סנטימנט כללי: **{sentiment}**")
-        st.write(f"📌 המלצה: **{recommendation}**")
-        st.write(f"🕒 זמן בדיקה: {datetime.now().strftime('%d/%m/%Y %H:%M')}")
+        st.write(f"📊 סנטימנט: **{sentiment}**")
+        st.write(f"📌 המלצה: **{rec}**")
+        st.write(f"🕒 {datetime.now().strftime('%d/%m/%Y %H:%M')}")
 
-        if recommendation == "קנייה":
-            st.success("📈 איתות קנייה על בסיס חדשות")
-        elif recommendation == "מכירה":
-            st.error("📉 איתות מכירה על בסיס חדשות")
+        if rec == "קנייה":
+            st.success("📈 איתות קנייה")
+        elif rec == "מכירה":
+            st.error("📉 איתות מכירה")
         else:
-            st.info("⏸️ אין איתות חזק")
+            st.info("⏸️ אין פעולה")
 
         st.divider()
 
-st.caption("⚠️ המערכת לצורכי לימוד בלבד – אינה ייעוץ השקעות")
+st.caption("⚠️ לצורכי לימוד בלבד – לא ייעוץ השקעות")
