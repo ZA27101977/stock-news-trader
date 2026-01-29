@@ -3,6 +3,13 @@ import requests
 from datetime import datetime
 
 st.set_page_config(page_title="מערכת ניתוח מניות", layout="wide")
+import time
+
+REFRESH_SECONDS = 30
+st.caption(f"🔄 רענון אוטומטי כל {REFRESH_SECONDS} שניות")
+time.sleep(REFRESH_SECONDS)
+st.experimental_rerun()
+
 st.title("📊 מערכת ניתוח מניות – ניתוח בעברית")
 
 NEWS_API_KEY = st.secrets["NEWS_API_KEY"]
